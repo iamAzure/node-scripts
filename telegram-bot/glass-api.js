@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { logApiCall } from './log.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ const API_STH_MVRV = 'v1/metrics/market/mvrv_less_155';
 const API_LTH_MVRV = 'v1/metrics/market/mvrv_more_155';
 
 export function fetchMVRV(params) {
+    logApiCall('fetchMVRV', params);
     const API_KEY = getApiKey();
     const queryParams = {
         'a': params.symbol,
@@ -43,10 +45,17 @@ export function fetchMVRV(params) {
             params: queryParams,
             headers: { 'x-key': API_KEY },
         }).then(response => response.data),
-    ]);
+    ]).then(results => {
+        logApiCall('fetchMVRV', params, true);
+        return results;
+    }).catch(error => {
+        logApiCall('fetchMVRV', params, false, error);
+        throw error;
+    });
 }
 
 export function fetchSupply(params) {
+    logApiCall('fetchSupply', params);
     const API_KEY = getApiKey();
     return Promise.all([
         axios({
@@ -63,10 +72,17 @@ export function fetchSupply(params) {
             headers: { 'x-key': API_KEY },
             params: { 'a': params.symbol, 'i': '24h', 's': params.startDate, 'u': params.endDate }
         }).then(response => response.data),
-    ]);
+    ]).then(results => {
+        logApiCall('fetchSupply', params, true);
+        return results;
+    }).catch(error => {
+        logApiCall('fetchSupply', params, false, error);
+        throw error;
+    });
 }
 
 export function fetchBalanceExchanges(params) {
+    logApiCall('fetchBalanceExchanges', params);
     const API_KEY = getApiKey();
     return axios({
         method: 'GET',
@@ -74,6 +90,12 @@ export function fetchBalanceExchanges(params) {
         baseURL: BASE_URL,
         headers: { 'x-key': API_KEY },
         params: { 'a': params.symbol, 'i': '24h', 's': params.startDate, 'u': params.endDate }
-    }).then(response => response.data);
+    }).then(response => {
+        logApiCall('fetchBalanceExchanges', params, true);
+        return response.data;
+    }).catch(error => {
+        logApiCall('fetchBalanceExchanges', params, false, error);
+        throw error;
+    });
 }
 

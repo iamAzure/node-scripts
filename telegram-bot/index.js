@@ -2,6 +2,7 @@ import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
 import dayjs from 'dayjs';
 import { fetchSupply, fetchBalanceExchanges, fetchMVRV } from './glass-api.js';
+import { logFunctionCall, logUserAction } from './log.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ function formatDiff(data, symbol) {
 
 // 获取交易所余额数据
 async function getExchangeBalance(startDate, endDate) {
+    logFunctionCall('getExchangeBalance', { startDate, endDate });
     try {
         const [ethData, dogeData, btcData, solData, eigenData] = await Promise.all([
             fetchBalanceExchanges({ symbol: 'ETH', startDate, endDate }),
@@ -73,8 +75,10 @@ async function getExchangeBalance(startDate, endDate) {
             formatDiff(eigenData, '🟢 EIGEN'),
         ];
 
+        logFunctionCall('getExchangeBalance', { startDate, endDate, success: true });
         return lines.join('\n\n');
     } catch (error) {
+        logFunctionCall('getExchangeBalance', { startDate, endDate, success: false, error: error.message });
         console.error('获取交易所余额失败:', error);
         throw new Error('获取交易所余额数据失败，请稍后重试');
     }
@@ -82,6 +86,7 @@ async function getExchangeBalance(startDate, endDate) {
 
 // 获取供应量数据
 async function getSupply(startDate, endDate) {
+    logFunctionCall('getSupply', { startDate, endDate });
     try {
         const [btcLongTermHoldersData, btcShortTermHoldersData] = await fetchSupply({ symbol: 'BTC', startDate, endDate });
 
@@ -91,8 +96,10 @@ async function getSupply(startDate, endDate) {
             formatDiff(btcShortTermHoldersData, '🟧 BTC 短期持有者'),
         ];
 
+        logFunctionCall('getSupply', { startDate, endDate, success: true });
         return lines.join('\n\n');
     } catch (error) {
+        logFunctionCall('getSupply', { startDate, endDate, success: false, error: error.message });
         console.error('获取供应量失败:', error);
         throw new Error('获取供应量数据失败，请稍后重试');
     }
@@ -100,6 +107,7 @@ async function getSupply(startDate, endDate) {
 
 // 获取 MVRV 数据
 async function getMVRV(startDate, endDate) {
+    logFunctionCall('getMVRV', { startDate, endDate });
     try {
         const [btcLthMvrv, btcSthMvrv] = await fetchMVRV({ symbol: 'BTC', startDate, endDate });
         const lines = [
@@ -108,8 +116,10 @@ async function getMVRV(startDate, endDate) {
             formatDiff(btcSthMvrv, '🟧 BTC 短期持有者 MVRV'),
         ];
 
+        logFunctionCall('getMVRV', { startDate, endDate, success: true });
         return lines.join('\n\n');
     } catch (error) {
+        logFunctionCall('getMVRV', { startDate, endDate, success: false, error: error.message });
         console.error('获取 MVRV 失败:', error);
         throw new Error('获取 MVRV 数据失败，请稍后重试');
     }
@@ -150,6 +160,7 @@ function getBackMenuButton() {
 
 // 帮助命令
 bot.command('help', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_help');
     const timeRange = userTimeRange.get(ctx.from.id) || 'week';
     const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
     const helpText = `
@@ -181,6 +192,7 @@ bot.command('help', (ctx) => {
 
 // 开始命令
 bot.command('start', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_start');
     const welcomeText = `
 👋 欢迎使用 Glassnode 数据查询机器人！
 
@@ -200,6 +212,7 @@ bot.command('start', (ctx) => {
 
 // 菜单命令
 bot.command('menu', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_menu');
     const timeRange = userTimeRange.get(ctx.from.id) || 'week';
     const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
     ctx.reply(`📋 主菜单\n\n当前时间范围：${timeRangeText}`, getMainMenu());
@@ -207,18 +220,21 @@ bot.command('menu', (ctx) => {
 
 // 设置时间范围为上一周
 bot.command('week', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_week', { timeRange: 'week' });
     userTimeRange.set(ctx.from.id, 'week');
     ctx.reply('✅ 已设置时间范围为：**上一周**', { parse_mode: 'Markdown', ...getMainMenu() });
 });
 
 // 设置时间范围为上个月
 bot.command('month', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_month', { timeRange: 'month' });
     userTimeRange.set(ctx.from.id, 'month');
     ctx.reply('✅ 已设置时间范围为：**上个月**', { parse_mode: 'Markdown', ...getMainMenu() });
 });
 
 // 处理按钮回调
 bot.action('show_menu', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'action_show_menu');
     const timeRange = userTimeRange.get(ctx.from.id) || 'week';
     const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
     ctx.editMessageText(`📋 主菜单\n\n当前时间范围：${timeRangeText}`, getMainMenu());
@@ -226,6 +242,7 @@ bot.action('show_menu', (ctx) => {
 
 // 显示帮助
 bot.action('show_help', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'action_show_help');
     const helpText = `
 🤖 **Glassnode 数据查询机器人**
 
@@ -253,6 +270,7 @@ bot.action('show_help', (ctx) => {
 
 // 设置时间范围为上一周（按钮）
 bot.action('set_week', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'action_set_week', { timeRange: 'week' });
     userTimeRange.set(ctx.from.id, 'week');
     ctx.answerCbQuery('✅ 已设置时间范围为：上一周');
     const timeRangeText = '上一周';
@@ -261,6 +279,7 @@ bot.action('set_week', (ctx) => {
 
 // 设置时间范围为上个月（按钮）
 bot.action('set_month', (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'action_set_month', { timeRange: 'month' });
     userTimeRange.set(ctx.from.id, 'month');
     ctx.answerCbQuery('✅ 已设置时间范围为：上个月');
     const timeRangeText = '上个月';
@@ -269,9 +288,10 @@ bot.action('set_month', (ctx) => {
 
 // 查询供应量（按钮）
 bot.action('query_supply', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'action_query_supply', { timeRange });
     try {
         await ctx.answerCbQuery('⏳ 正在查询供应量数据...');
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -281,16 +301,19 @@ bot.action('query_supply', async (ctx) => {
             parse_mode: 'Markdown', 
             ...getBackMenuButton() 
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_supply', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_supply', { timeRange, success: false, error: error.message });
         ctx.editMessageText(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 查询交易所余额（按钮）
 bot.action('query_exchange', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'action_query_exchange', { timeRange });
     try {
         await ctx.answerCbQuery('⏳ 正在查询交易所余额数据...');
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -300,16 +323,19 @@ bot.action('query_exchange', async (ctx) => {
             parse_mode: 'Markdown', 
             ...getBackMenuButton() 
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_exchange', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_exchange', { timeRange, success: false, error: error.message });
         ctx.editMessageText(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 查询 MVRV（按钮）
 bot.action('query_mvrv', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'action_query_mvrv', { timeRange });
     try {
         await ctx.answerCbQuery('⏳ 正在查询 MVRV 数据...');
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -319,15 +345,18 @@ bot.action('query_mvrv', async (ctx) => {
             parse_mode: 'Markdown', 
             ...getBackMenuButton() 
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_mvrv', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'action_query_mvrv', { timeRange, success: false, error: error.message });
         ctx.editMessageText(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 查询供应量（命令）
 bot.command('supply', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'command_supply', { timeRange });
     try {
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -338,15 +367,18 @@ bot.command('supply', async (ctx) => {
             parse_mode: 'Markdown',
             ...getBackMenuButton()
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'command_supply', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'command_supply', { timeRange, success: false, error: error.message });
         ctx.reply(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 查询交易所余额（命令）
 bot.command('exchange', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'command_exchange', { timeRange });
     try {
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -357,15 +389,18 @@ bot.command('exchange', async (ctx) => {
             parse_mode: 'Markdown',
             ...getBackMenuButton()
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'command_exchange', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'command_exchange', { timeRange, success: false, error: error.message });
         ctx.reply(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 查询 MVRV（命令）
 bot.command('mvrv', async (ctx) => {
+    const timeRange = userTimeRange.get(ctx.from.id) || 'week';
+    logUserAction(ctx.from.id, ctx.from.username, 'command_mvrv', { timeRange });
     try {
-        const timeRange = userTimeRange.get(ctx.from.id) || 'week';
         const { startDate, endDate } = calculateTimeRange(timeRange);
         const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
         const timeInfo = `📅 时间范围：${timeRangeText}\n${dayjs.unix(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs.unix(endDate).format('YYYY-MM-DD HH:mm:ss')}\n`;
@@ -376,27 +411,45 @@ bot.command('mvrv', async (ctx) => {
             parse_mode: 'Markdown',
             ...getBackMenuButton()
         });
+        logUserAction(ctx.from.id, ctx.from.username, 'command_mvrv', { timeRange, success: true });
     } catch (error) {
+        logUserAction(ctx.from.id, ctx.from.username, 'command_mvrv', { timeRange, success: false, error: error.message });
         ctx.reply(`❌ 错误：${error.message}`, getBackMenuButton());
     }
 });
 
 // 错误处理
 bot.catch((err, ctx) => {
+    const userId = ctx.from?.id || 'unknown';
+    const username = ctx.from?.username || 'unknown';
+    logUserAction(userId, username, 'error', { 
+        updateType: ctx.updateType, 
+        error: err.message,
+        stack: err.stack 
+    });
     console.error(`错误发生在 ${ctx.updateType}:`, err);
     ctx.reply('❌ 发生了一个错误，请稍后重试或联系管理员');
 });
 
 // 启动机器人
 console.log('🤖 正在启动 Telegram 机器人...');
+logFunctionCall('bot_startup', { status: 'starting' });
 bot.launch().then(() => {
+    logFunctionCall('bot_startup', { status: 'success' });
     console.log('✅ 机器人已成功启动！');
 }).catch((error) => {
+    logFunctionCall('bot_startup', { status: 'failed', error: error.message });
     console.error('❌ 机器人启动失败:', error);
     process.exit(1);
 });
 
 // 优雅关闭
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => {
+    logFunctionCall('bot_shutdown', { signal: 'SIGINT' });
+    bot.stop('SIGINT');
+});
+process.once('SIGTERM', () => {
+    logFunctionCall('bot_shutdown', { signal: 'SIGTERM' });
+    bot.stop('SIGTERM');
+});
 
