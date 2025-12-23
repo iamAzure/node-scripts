@@ -23,14 +23,12 @@ const bot = new Telegraf(getBotToken());
 registerBotActions(bot);
 
 // 启动机器人
-console.log('🤖 正在启动 Telegram 机器人...');
 logFunctionCall('bot_startup', { status: 'starting' });
 
 (async () => {
     try {
         await bot.launch();
         logFunctionCall('bot_startup', { status: 'success' });
-        console.log('✅ 机器人已成功启动！');
         
         // 等待一小段时间确保 bot 完全初始化
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -39,7 +37,6 @@ logFunctionCall('bot_startup', { status: 'starting' });
         await setupCommandsMenu(bot);
     } catch (error) {
         logFunctionCall('bot_startup', { status: 'failed', error: error.message });
-        console.error('❌ 机器人启动失败:', error);
         process.exit(1);
     }
 })();
