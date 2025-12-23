@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:bot": "node telegram-bot.js"
+    "start:bot": "node telegram-bot/index.js"
   },
   "keywords": [],
   "author": "",

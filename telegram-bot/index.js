@@ -1,7 +1,7 @@
 import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
 import dayjs from 'dayjs';
-import { fetchSupply, fetchBalanceExchanges, fetchMVRV } from '../glass-api.js';
+import { fetchSupply, fetchBalanceExchanges, fetchMVRV } from './glass-api.js';
 
 dotenv.config();
 
