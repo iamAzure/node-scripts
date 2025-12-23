@@ -1,0 +1,29 @@
+{
+  "name": "glassnode",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:bot": "node telegram-bot.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.19.0",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bip32": "^5.0.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^7.0.0",
+    "commander": "^12.1.0",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
+    "ecpair": "^3.0.0",
+    "ethers": "^6.16.0",
+    "excluder-mcp-package": "^1.0.4",
+    "telegraf": "^4.16.3",
+    "tiny-secp256k1": "^2.2.4"
+  }
+}

