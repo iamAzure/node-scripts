@@ -128,6 +128,41 @@ async function getMVRV(startDate, endDate) {
 // 创建机器人实例
 const bot = new Telegraf(getBotToken());
 
+// 设置命令菜单（左下角菜单按钮）
+async function setupCommandsMenu() {
+    try {
+        console.log('📋 正在设置命令菜单...');
+        const commands = [
+            {
+                command: 'start',
+                description: '功能速覽 - 开始使用机器人'
+            },
+            {
+                command: 'menu',
+                description: '主菜单 - 显示功能菜单'
+            },
+            {
+                command: 'help',
+                description: '入門指南 - 查看帮助信息'
+            }
+        ];
+        
+        await bot.telegram.setMyCommands(commands);
+        console.log('✅ 命令菜单已设置成功');
+        console.log('📝 设置的命令:', commands.map(c => `/${c.command} - ${c.description}`).join(', '));
+        logFunctionCall('setupCommandsMenu', { success: true, commands: commands.length });
+        return true;
+    } catch (error) {
+        console.error('❌ 设置命令菜单失败:', error);
+        console.error('错误详情:', error.message);
+        if (error.stack) {
+            console.error('错误堆栈:', error.stack);
+        }
+        logFunctionCall('setupCommandsMenu', { success: false, error: error.message });
+        return false;
+    }
+}
+
 // 存储用户的时间范围偏好
 const userTimeRange = new Map();
 
@@ -216,6 +251,22 @@ bot.command('menu', (ctx) => {
     const timeRange = userTimeRange.get(ctx.from.id) || 'week';
     const timeRangeText = timeRange === 'month' ? '上个月' : '上一周';
     ctx.reply(`📋 主菜单\n\n当前时间范围：${timeRangeText}`, getMainMenu());
+});
+
+// 设置命令菜单（管理员命令，用于测试）
+bot.command('setupmenu', async (ctx) => {
+    logUserAction(ctx.from.id, ctx.from.username, 'command_setupmenu');
+    try {
+        await ctx.reply('⏳ 正在设置命令菜单...');
+        const result = await setupCommandsMenu();
+        if (result) {
+            await ctx.reply('✅ 命令菜单设置成功！\n\n请尝试：\n1. 关闭并重新打开与机器人的对话\n2. 点击左下角的菜单按钮查看命令');
+        } else {
+            await ctx.reply('❌ 命令菜单设置失败，请查看服务器日志');
+        }
+    } catch (error) {
+        await ctx.reply(`❌ 设置失败: ${error.message}`);
+    }
 });
 
 // 设置时间范围为上一周
@@ -434,14 +485,24 @@ bot.catch((err, ctx) => {
 // 启动机器人
 console.log('🤖 正在启动 Telegram 机器人...');
 logFunctionCall('bot_startup', { status: 'starting' });
-bot.launch().then(() => {
-    logFunctionCall('bot_startup', { status: 'success' });
-    console.log('✅ 机器人已成功启动！');
-}).catch((error) => {
-    logFunctionCall('bot_startup', { status: 'failed', error: error.message });
-    console.error('❌ 机器人启动失败:', error);
-    process.exit(1);
-});
+
+(async () => {
+    try {
+        await bot.launch();
+        logFunctionCall('bot_startup', { status: 'success' });
+        console.log('✅ 机器人已成功启动！');
+        
+        // 等待一小段时间确保 bot 完全初始化
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 设置命令菜单
+        await setupCommandsMenu();
+    } catch (error) {
+        logFunctionCall('bot_startup', { status: 'failed', error: error.message });
+        console.error('❌ 机器人启动失败:', error);
+        process.exit(1);
+    }
+})();
 
 // 优雅关闭
 process.once('SIGINT', () => {
